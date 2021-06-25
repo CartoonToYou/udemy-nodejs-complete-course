@@ -1,9 +1,29 @@
-const http = require("http");
+const express = require("express");
 
-const routes = require("./routes");
+const app = express();
 
-console.log(routes.someText);
+app.use("/", (req, res, next) => {
+  console.log("This always run!");
+  next();
+});
 
-const server = http.createServer(routes.handler);
+app.use("/product", (req, res, next) => {});
 
-server.listen(3000);
+app.use("/add-product", (req, res, next) => {
+  console.log("In another middleware!");
+  res.send(`<html>
+    <body>
+      <form action="/product" method="POST">
+        <input type="text" name="title">
+        <button type="submit">Add Product</button>
+      </form>
+    </body>
+  </html>`);
+});
+
+app.use("/", (req, res, next) => {
+  console.log("In another middleware!");
+  res.send("<h1>Hello from express</h1>");
+});
+
+app.listen(3000);
