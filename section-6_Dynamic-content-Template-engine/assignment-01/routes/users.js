@@ -1,11 +1,18 @@
-const path = require("path");
-
 const express = require("express");
 
 const router = express.Router();
 
-router.get("/users", (req, res, next) => {
-  res.sendFile(path.join(__dirname, "..", "views", "users.html"));
+const users = [];
+
+router.get("/add-user", (req, res, next) => {
+  res.render("users", {
+    pageTitle: "Users",
+  });
 });
 
-module.exports = router;
+router.post("/add-user", (req, res, next) => {
+  users.push({ username: req.body.username });
+  res.redirect("/");
+});
+
+module.exports = { router, users };

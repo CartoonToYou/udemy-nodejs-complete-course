@@ -1,0 +1,17 @@
+<%- include('includes/header.ejs') %>
+
+  <main>
+    <h1>Welcome to assignment 1 of Section 6</h1>
+    <p>
+      All users list below
+    </p>
+    <ul>
+      <% users.forEach(user=> { %>
+        <li>
+          <%= user.username %>
+        </li>
+        <% }) %>
+    </ul>
+  </main>
+
+  <%- include('includes/footer.ejs') %>
