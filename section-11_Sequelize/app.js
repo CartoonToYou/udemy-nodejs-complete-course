@@ -9,6 +9,8 @@ const Product = require("./models/product");
 const User = require("./models/user");
 const Cart = require("./models/cart");
 const CartItem = require("./models/cart-item");
+const Order = require("./models/order");
+const OrderItem = require("./models/order-item");
 
 const app = express();
 
@@ -43,9 +45,13 @@ Product.belongsTo(User, {
 });
 User.hasMany(Product);
 User.hasOne(Cart);
+User.hasMany(Order);
 Cart.belongsTo(User);
 Cart.belongsToMany(Product, { through: CartItem });
+Order.belongsTo(User);
+Order.belongsToMany(Product, { through: OrderItem });
 Product.belongsToMany(Cart, { through: CartItem });
+Product.belongsToMany(Order, { through: OrderItem });
 
 sequelize
   /* force: true => always recreate database */
