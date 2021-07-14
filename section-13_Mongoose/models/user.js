@@ -30,7 +30,6 @@ const userSchema = new Schema({
 /* extends new methods in userSchema instance */
 /* only function expression => "this" will point to instance of userShcema */
 userSchema.methods.addToCart = function (product) {
-  console.log(this);
   const cartProductIndex = this.cart.items.findIndex((cp) => {
     return cp.productId.toString() === product._id.toString();
   });
@@ -50,6 +49,14 @@ userSchema.methods.addToCart = function (product) {
     items: updatedCartItems,
   };
   this.cart = updatedCart;
+  return this.save();
+};
+
+userSchema.methods.removeFromCart = function (productId) {
+  const updatedCartItems = this.cart.items.filter((item) => {
+    return item.productId.toString() !== productId.toString();
+  });
+  this.cart.items = updatedCartItems;
   return this.save();
 };
 

@@ -72,7 +72,7 @@ exports.postCart = (req, res, next) => {
 exports.postCartDeleteProduct = (req, res, next) => {
   const prodId = req.body.productId;
   req.user
-    .deleteItemFromCart(prodId)
+    .removeFromCart(prodId)
     .then((result) => {
       res.redirect("/cart");
     })
@@ -80,7 +80,6 @@ exports.postCartDeleteProduct = (req, res, next) => {
 };
 
 exports.postOrder = (req, res, next) => {
-  let fetchedCart;
   req.user
     .addOrder()
     .then((result) => {
@@ -91,8 +90,10 @@ exports.postOrder = (req, res, next) => {
 
 exports.getOrders = (req, res, next) => {
   req.user
-    .getOrders()
-    .then((orders) => {
+    .populate("order.items.productId")
+    .execPopulate()
+    .then((user) => {
+      const orders = user.order;
       res.render("shop/orders", {
         path: "/orders",
         pageTitle: "Your Orders",
