@@ -1,4 +1,5 @@
 const Product = require("../models/product");
+const Order = require("../models/order");
 
 exports.getProducts = (req, res, next) => {
   Product.find()
@@ -81,24 +82,44 @@ exports.postCartDeleteProduct = (req, res, next) => {
 
 exports.postOrder = (req, res, next) => {
   req.user
-    .addOrder()
-    .then((result) => {
+    .populate("cart.items.productId")
+    .execPopulate()
+    .then((user) => {
+      const products = user.cart.items.map((item) => {
+        // ._doc => extract all nested data in document with ref to producId (use with spread operator)
+        return {
+          product: { ...item.productId._doc },
+          quantity: item.quantity,
+        };
+      });
+      const order = new Order({
+        user: {
+          userId: req.user,
+          name: req.user.name,
+        },
+        products: products,
+      });
+      return order.save();
+    })
+    .then(() => {
+      return req.user.clearCart();
+    })
+    .then(() => {
       res.redirect("/orders");
     })
     .catch((err) => console.log(err));
 };
 
 exports.getOrders = (req, res, next) => {
-  req.user
-    .populate("order.items.productId")
-    .execPopulate()
-    .then((user) => {
-      const orders = user.order;
+  Order.find({ "user.userId": req.user._id })
+    .then((orders) => {
       res.render("shop/orders", {
         path: "/orders",
         pageTitle: "Your Orders",
         orders: orders,
       });
     })
-    .catch((err) => console.log(err));
+    .catch((err) => {
+      console.error(err);
+    });
 };
