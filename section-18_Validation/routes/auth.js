@@ -2,6 +2,7 @@ const express = require("express");
 const { check, body } = require("express-validator/check");
 
 const authController = require("../controllers/auth");
+const User = require("../models/user");
 
 const router = express.Router();
 
@@ -9,29 +10,72 @@ router.get("/login", authController.getLogin);
 
 router.get("/signup", authController.getSignup);
 
-router.post("/login", authController.postLogin);
+router.post(
+  "/login",
+  [
+    body("email")
+      .isEmail()
+      .withMessage("Please enter a valid email.")
+      .custom((value, { req }) => {
+        return User.findOne({ email: value }).then((user) => {
+          if (!user) {
+            return Promise.reject(
+              "Your E-Mail or password in not correct. Please try again or click forgot password"
+            );
+          }
+        });
+      }),
+    body("password").custom((value, { req }) => {
+      return User.findOne({ email: req.body.email }).then((user) => {
+        bcrypt.compare(value, user.password).then((doMatch) => {
+          console.log(doMatch);
+          if (!doMatch) {
+            return Promise.reject(
+              "Your E-Mail or password in not correct. Please try again or click forgot password"
+            );
+          }
+        });
+      });
+    }),
+  ],
+  authController.postLogin
+);
 
 router.post(
   "/signup",
   /* use array for many fields to validate */
   [
+    /* withMessage will show error after method that it chained */
     check("email")
       .isEmail()
-      /* withMessage will show error after method that it chained */
       .withMessage("Please enter a valid email.")
       .custom((value, { req }) => {
-        if (value === "test@test.com") {
-          throw new Error("This is email address is forbidden.");
-        }
-        return true;
+        // if (value === "test@test.com") {
+        //   throw new Error("This is email address is forbidden.");
+        // }
+        // return true;
+        /* Async validation */
+        return User.findOne({ email: value }).then((userDoc) => {
+          if (userDoc) {
+            return Promise.reject(
+              "E-Mail exists already, please pick a different one."
+            );
+          }
+        });
       }),
     /* 2nd argument in check, body or ... will show error message in all validation condition */
     body(
-      "passsword",
+      "password",
       "Please enter a password with only numbers and text and at least 5 characters"
     )
       .isLength({ min: 5 })
       .isAlphanumeric(),
+    body("confirmPassword").custom((value, { req }) => {
+      if (value !== req.body.password) {
+        throw new Error("Passwords have to match!");
+      }
+      return true;
+    }),
   ],
   authController.postSignup
 );
