@@ -16,27 +16,14 @@ router.post(
     body("email")
       .isEmail()
       .withMessage("Please enter a valid email.")
-      .custom((value, { req }) => {
-        return User.findOne({ email: value }).then((user) => {
-          if (!user) {
-            return Promise.reject(
-              "Your E-Mail or password in not correct. Please try again or click forgot password"
-            );
-          }
-        });
-      }),
-    body("password").custom((value, { req }) => {
-      return User.findOne({ email: req.body.email }).then((user) => {
-        bcrypt.compare(value, user.password).then((doMatch) => {
-          console.log(doMatch);
-          if (!doMatch) {
-            return Promise.reject(
-              "Your E-Mail or password in not correct. Please try again or click forgot password"
-            );
-          }
-        });
-      });
-    }),
+      .normalizeEmail(),
+    body(
+      "password",
+      "Please enter a password with only numbers and text and at least 5 characters"
+    )
+      .isLength({ min: 5 })
+      .isAlphanumeric()
+      .trim(),
   ],
   authController.postLogin
 );
@@ -62,20 +49,24 @@ router.post(
             );
           }
         });
-      }),
-    /* 2nd argument in check, body or ... will show error message in all validation condition */
+      })
+      .normalizeEmail(),
+    /* 2nd argument in check, body or others will show error message in all validation condition (default message) */
     body(
       "password",
       "Please enter a password with only numbers and text and at least 5 characters"
     )
       .isLength({ min: 5 })
-      .isAlphanumeric(),
-    body("confirmPassword").custom((value, { req }) => {
-      if (value !== req.body.password) {
-        throw new Error("Passwords have to match!");
-      }
-      return true;
-    }),
+      .isAlphanumeric()
+      .trim(),
+    body("confirmPassword")
+      .trim()
+      .custom((value, { req }) => {
+        if (value !== req.body.password) {
+          throw new Error("Passwords have to match!");
+        }
+        return true;
+      }),
   ],
   authController.postSignup
 );
