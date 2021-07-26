@@ -47,10 +47,15 @@ app.use((req, res, next) => {
   }
   User.findById(req.session.user._id)
     .then((user) => {
+      if (!user) {
+        return next();
+      }
       req.user = user;
       next();
     })
-    .catch((err) => console.log(err));
+    .catch((err) => {
+      throw new Error(err);
+    });
 });
 
 app.use((req, res, next) => {
@@ -63,7 +68,19 @@ app.use("/admin", adminRoutes);
 app.use(shopRoutes);
 app.use(authRoutes);
 
+app.use("/500", errorController.get500);
 app.use(errorController.get404);
+
+/* 
+  - "error" argument is special case for handling with error by middleware
+  - If got more than 1 error-handling middleware, they'll execute from top to bottom. 
+    Just like the "normal" middleware
+*/
+app.use((error, req, res, next) => {
+  /* use key (httpStatusCode) that add from error variable */
+  // res.status(error.httpStatusCode).render(...);
+  res.redirect("/500");
+});
 
 mongoose
   .connect(MONGODB_URI)
