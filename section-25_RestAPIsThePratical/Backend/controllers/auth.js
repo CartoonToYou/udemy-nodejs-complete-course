@@ -53,11 +53,13 @@ exports.login = (req, res, next) => {
         error.statusCode = 401;
         throw error;
       }
+      /* using JWT when successful login */
       const token = jwt.sign(
         {
           email: loadedUser.email,
           userId: loadedUser._id.toString(),
         },
+        /* secret word for validate token */
         "somesupersecretsecretword",
         { expiresIn: "1h" }
       );
