@@ -126,6 +126,11 @@ exports.updatePost = (req, res, next) => {
         error.statusCode = 404;
         throw error;
       }
+      if (post.creator.toString() !== req.userId) {
+        const error = new Error("Not authorized!");
+        error.statusCode = 403;
+        throw error;
+      }
       if (imageUrl !== post.imageUrl) {
         clearImage(post.imageUrl);
       }
@@ -154,12 +159,24 @@ exports.deletePost = (req, res, next) => {
         error.statusCode = 404;
         throw error;
       }
+      if (post.creator.toString() !== req.userId) {
+        const error = new Error("Not authorized!");
+        error.statusCode = 403;
+        throw error;
+      }
       // check logged in user
       clearImage(post.imageUrl);
       return Post.findByIdAndRemove(postId);
     })
+    .then(() => {
+      return User.findById(req.userId);
+    })
+    .then((user) => {
+      /* pull => method to delete record relation in MongoDB */
+      user.posts.pull(postId);
+      return user.save();
+    })
     .then((result) => {
-      console.log(result);
       res.status(200).json({
         message: "Deleted post.",
       });

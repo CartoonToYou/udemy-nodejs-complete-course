@@ -22,7 +22,12 @@ class Feed extends Component {
   };
 
   componentDidMount() {
-    fetch("URL")
+    fetch("http://localhost:8080/user/status", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${this.props.token}`,
+      },
+    })
       .then((res) => {
         if (res.status !== 200) {
           throw new Error("Failed to fetch user status.");
@@ -78,7 +83,16 @@ class Feed extends Component {
 
   statusUpdateHandler = (event) => {
     event.preventDefault();
-    fetch("URL")
+    const userId = localStorage.getItem("userId");
+    fetch(`http://localhost:8080/user/status/${userId}`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${this.props.token}`,
+      },
+      body: {
+        status: this.state.status,
+      },
+    })
       .then((res) => {
         if (res.status !== 200 && res.status !== 201) {
           throw new Error("Can't update status!");
@@ -87,6 +101,7 @@ class Feed extends Component {
       })
       .then((resData) => {
         console.log(resData);
+        this.setState({ status: resData.status });
       })
       .catch(this.catchError);
   };
