@@ -51,11 +51,16 @@ app.use((req, res, next) => {
 });
 
 /* GraphQL use /graphql for convetionl model */
+/*
+graphiql: true => will render graphql GUI when using this GraphQL with browser
+Can query, mutation, subscription with this GUI
+*/
 app.use(
   "/graphql",
   graphqlHTTP({
     schema: graphqlSchema,
     rootValue: graphqlResolver,
+    graphiql: true,
   })
 );
 
