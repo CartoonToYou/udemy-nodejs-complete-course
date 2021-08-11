@@ -9,6 +9,7 @@ const { graphqlHTTP } = require("express-graphql");
 
 const graphqlSchema = require("./graphql/schema");
 const graphqlResolver = require("./graphql/resolver");
+const auth = require("./middleware/auth");
 
 const app = express();
 
@@ -47,8 +48,19 @@ app.use((req, res, next) => {
     "OPTIONS, GET, POST, PUT, PATCH, DELETE"
   );
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  /*
+    *** GraphQL ***
+    browser first sending OPTIONS method then specific method from fetch request
+    and GraphQL recieve only GET or POST
+    then need to check if method with OPTIONS with return sendStatus 200
+  */
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
   next();
 });
+
+app.use(auth);
 
 /* GraphQL use /graphql for convetionl model */
 /*
@@ -61,6 +73,20 @@ app.use(
     schema: graphqlSchema,
     rootValue: graphqlResolver,
     graphiql: true,
+    formatError(err) {
+      /*
+      originalError === default error that will return
+      if not have error from express-graphql or 3rd party package
+      */
+      if (!err.originalError) {
+        return err;
+      }
+      /* err.message recieved from resolver (if have some errors) */
+      const data = err.originalError.data;
+      const message = err.message || "An error occurred.";
+      const code = err.originalError.code || 500;
+      return { message: message, status: code, data: data };
+    },
   })
 );
 
