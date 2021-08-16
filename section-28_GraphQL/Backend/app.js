@@ -1,4 +1,5 @@
 const path = require("path");
+const fs = require("fs");
 
 const express = require("express");
 const bodyParser = require("body-parser");
@@ -62,6 +63,24 @@ app.use((req, res, next) => {
 
 app.use(auth);
 
+app.put("/post-image", (req, res, next) => {
+  if (!req.isAuth) {
+    throw new Error("Not authenticated!");
+  }
+  if (!req.file) {
+    return res.status(200).json({
+      message: "No file provided!",
+    });
+  }
+  if (!req.body.oldPath) {
+    clearImage(req.body.oldPath);
+  }
+  return res.status(201).json({
+    message: "File stored.",
+    filePath: req.file.path,
+  });
+});
+
 /* GraphQL use /graphql for convetionl model */
 /*
 graphiql: true => will render graphql GUI when using this GraphQL with browser
@@ -100,10 +119,15 @@ app.use((error, req, res, next) => {
 
 mongoose
   .connect(
-    "mongodb+srv://node-complete:dhvd6gdiupo@node-complete-cluster.dq9dg.mongodb.net/messages?authSource=admin&replicaSet=atlas-r87bj8-shard-0&w=majority&readPreference=primary&appname=MongoDB%20Compass&retryWrites=true&ssl=true"
+    "mongodb+srv://node-complete:dhvd6gdiupo@node-complete-cluster.dq9dg.mongodb.net/messages?retryWrites=true&w=majority"
   )
   .then((result) => {
     app.listen(8080);
     console.log("CONNECTED!");
   })
   .catch((err) => console.log(err));
+
+const clearImage = (filePath) => {
+  filePath = path.join(__dirname, "..", filePath);
+  fs.unlink(filePath, (err) => console.log(err));
+};
