@@ -6,8 +6,20 @@ const num2Element = document.getElementById('num2') as HTMLInputElement
 */
 const buttonElement = document.querySelector('button')!
 
+/* Generics type (type that interact with another type) => Array with value type */
+const numResults: Array<number> = []
+const textResults: string[] = []
+
+/* Type aliases & Interface => declare custom date type in TS */
+type NumOrString = number | string
+type Result = {val: number; timestamp: Date}
+interface ResultObj {
+  val: number;
+  timestamp: Date
+}
+
 /* | => Union type => using for optional type of variable */
-function add(num1: number | string, num2: number | string) {
+function add(num1: NumOrString, num2: NumOrString) {
   /* Type guard */
   if(typeof num1 === 'number' && typeof num2 === 'number') {
     return num1 + num2;
@@ -18,13 +30,29 @@ function add(num1: number | string, num2: number | string) {
   return +num1 + +num2
 }
 
+function printResult(resultObj: ResultObj) {
+  console.log(resultObj.val)
+}
+
 buttonElement.addEventListener('click', () => {
   const num1 = num1Element.value;
   const num2 = num2Element.value
   const result = add(+num1, +num2)
+  numResults.push(result as number)
   const stringResult = add(num1, num2)
-  console.log(result)
-  console.log(stringResult)
+  textResults.push(stringResult as string)
+  console.log(printResult({val: result as number, timestamp: new Date()}))
+  console.log(numResults, textResults)
+})
+
+const myPromise = new Promise<string>((resolve,reject) => {
+  setTimeout(() => {
+    resolve('It worked!')
+  }, 1000)
+})
+
+myPromise.then(result => {
+  console.log(result.split('w'))
 })
 
 /*
