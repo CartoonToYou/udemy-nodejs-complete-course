@@ -19,7 +19,7 @@ router.put("/todos/:todoId", (req, res, next) => {
   const todoIndex = todos.findIndex((todo) => {
     return todo.id === tid;
   });
-  todo[todoIndex] = { id: todos[todoIndex].id, text: req.body.text };
+  todos[todoIndex] = { id: todos[todoIndex].id, text: req.body.text };
   res.status(200).json({ message: "Updated todo!" });
 });
 
