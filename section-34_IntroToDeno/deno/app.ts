@@ -4,8 +4,10 @@ import todoRoutes  from "./routes/todos.ts"
 
 const app = new Application();
 
-// app.use((ctx) => {
-// });
+app.use(async (ctx, next) => {
+  console.log('Middleware!')
+  await next()
+});
 
 app.use(todoRoutes.routes());
 app.use(todoRoutes.allowedMethods())
