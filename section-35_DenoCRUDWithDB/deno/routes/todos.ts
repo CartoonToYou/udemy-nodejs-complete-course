@@ -1,27 +1,45 @@
 import { Router } from 'https://deno.land/x/oak/mod.ts';
+import { ObjectId } from "https://deno.land/x/mongo@v0.22.0/mod.ts";
+
+import { getDb } from "../helpers/db_client.ts"
 
 const router = new Router();
 
+/* ? => optional properties */
 interface Todo {
-  id: string;
+  id?: string;
+  text: string;
+}
+
+interface TodoSchema {
+  _id: {$oid: string};
   text: string;
 }
 
 let todos: Todo[] = [];
 
-router.get('/todos', (ctx) => {
-  ctx.response.body = { todos: todos };
+router.get('/todos', async (ctx) => {
+  const todos = await getDb().collection<TodoSchema>('todos').find(); // { _id: ObjectId(), text: '...' }[]
+  const transformedTodos = todos.map((todo: { _id: ObjectId, text:string }) => {
+    return {
+      id: todo._id.$oid,
+      text: todo.text
+    }
+  })
+  ctx.response.body = { todos: transformedTodos };
 });
 
 router.post('/todos', async (ctx) => {
-  const {value} = ctx.request.body({type: 'json'});
-  const {text} = await value
+  const { value } = ctx.request.body({type: 'json'});
+  const { text } = await value
   const newTodo: Todo = {
-    id: new Date().toISOString(),
+    // id: new Date().toISOString(),
     text: text,
   };
 
-  todos.push(newTodo);
+  const id = await getDb().collection('todos').insertOne(newTodo);
+
+  newTodo.id = id.$oid
 
   ctx.response.body = { message: 'Created todo!', todo: newTodo };
 });
